@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cal AI – Анализатор калорий</title>
+  <meta name="description" content="AI-powered food analyzer. Upload a photo and instantly get calories, proteins, fats, and carbohydrates." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Background orbs -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">🔥</div>
+        <span class="logo-text">Cal<span class="logo-accent">AI</span></span>
+      </div>
+      <p class="header-subtitle">Сфотографируй еду — узнай всё о калориях</p>
+    </header>
+
+    <!-- API Key Setup Banner -->
+    <div id="api-banner" class="api-banner">
+      <div class="api-banner-inner">
+        <span class="api-icon">🔑</span>
+        <div class="api-text">
+          <strong>Введи Gemini API Key для начала работы</strong>
+          <span>Бесплатно на <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a></span>
+        </div>
+        <button id="setup-btn" class="btn-setup">Настроить</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Upload Zone -->
+      <section class="upload-section" id="upload-section">
+        <div class="upload-card" id="drop-zone">
+          <div class="upload-visual">
+            <div class="upload-icon-wrap">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+              </svg>
+            </div>
+            <div class="upload-ring"></div>
+          </div>
+          <h2 class="upload-title">Загрузи фото блюда</h2>
+          <p class="upload-hint">Перетащи сюда или нажми для выбора · JPG, PNG, WEBP</p>
+          <div class="upload-actions">
+            <button class="btn-primary" id="upload-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Выбрать файл
+            </button>
+            <button class="btn-secondary" id="camera-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+              Камера
+            </button>
+          </div>
+          <input type="file" id="file-input" accept="image/*" hidden />
+          <input type="file" id="camera-input" accept="image/*" capture="environment" hidden />
+        </div>
+      </section>
+
+      <!-- Preview + Analyze Section -->
+      <section class="preview-section hidden" id="preview-section">
+        <div class="preview-card">
+          <div class="preview-image-wrap">
+            <img id="preview-img" src="" alt="Фото блюда" />
+            <button class="btn-change" id="change-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Другое фото
+            </button>
+          </div>
+          <button class="btn-analyze" id="analyze-btn">
+            <span class="btn-analyze-text">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              Анализировать блюдо
+            </span>
+            <span class="btn-analyze-loader hidden">
+              <span class="spinner"></span>
+              Анализирую...
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Results Section -->
+      <section class="results-section hidden" id="results-section">
+        <!-- Dish Name & Confidence -->
+        <div class="result-header">
+          <div class="dish-name-wrap">
+            <h2 class="dish-name" id="dish-name">—</h2>
+            <span class="confidence-badge" id="confidence-badge">High</span>
+          </div>
+          <p class="hidden-notes" id="hidden-notes"></p>
+        </div>
+
+        <!-- Total Calories -->
+        <div class="calories-card">
+          <div class="calories-main">
+            <span class="calories-num" id="total-calories">0</span>
+            <span class="calories-unit">ккал</span>
+          </div>
+          <div class="calories-label">Всего калорий</div>
+          <div class="macros-row">
+            <div class="macro-pill macro-protein">
+              <span class="macro-label">Белки</span>
+              <span class="macro-value" id="macro-protein">0г</span>
+            </div>
+            <div class="macro-pill macro-fats">
+              <span class="macro-label">Жиры</span>
+              <span class="macro-value" id="macro-fats">0г</span>
+            </div>
+            <div class="macro-pill macro-carbs">
+              <span class="macro-label">Углеводы</span>
+              <span class="macro-value" id="macro-carbs">0г</span>
+            </div>
+          </div>
+          <!-- Macro bar -->
+          <div class="macro-bar-wrap">
+            <div class="macro-bar" id="macro-bar">
+              <div class="macro-bar-segment seg-protein" id="seg-protein"></div>
+              <div class="macro-bar-segment seg-fats" id="seg-fats"></div>
+              <div class="macro-bar-segment seg-carbs" id="seg-carbs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Table -->
+        <div class="breakdown-card">
+          <h3 class="breakdown-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Состав блюда
+          </h3>
+          <div class="breakdown-table-wrap">
+            <table class="breakdown-table">
+              <thead>
+                <tr>
+                  <th>Ингредиент</th>
+                  <th>Вес</th>
+                  <th>Ккал</th>
+                  <th>Б</th>
+                  <th>Ж</th>
+                  <th>У</th>
+                </tr>
+              </thead>
+              <tbody id="breakdown-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- New Photo Button -->
+        <button class="btn-new-photo" id="new-photo-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+          Анализировать другое блюдо
+        </button>
+      </section>
+
+      <!-- Error Section -->
+      <div class="error-toast hidden" id="error-toast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="error-message">Произошла ошибка</span>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Powered by <strong>Gemini Vision AI</strong> · Результаты носят ориентировочный характер</p>
+    </footer>
+  </div>
+
+  <!-- API Key Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal" id="api-modal">
+      <div class="modal-header">
+        <h2>🔑 Настройка API ключа</h2>
+        <button class="modal-close" id="modal-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Введи свой <strong>Google Gemini API Key</strong>. Ключ хранится только локально в браузере.</p>
+        <div class="api-steps">
+          <div class="step"><span class="step-num">1</span> Перейди на <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div>
+          <div class="step"><span class="step-num">2</span> Нажми <strong>«Create API key»</strong></div>
+          <div class="step"><span class="step-num">3</span> Скопируй и вставь ключ ниже</div>
+        </div>
+        <div class="input-group">
+          <label for="api-key-input">API Key</label>
+          <div class="input-wrap">
+            <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" />
+            <button class="toggle-visibility" id="toggle-key">
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modal-cancel">Отмена</button>
+        <button class="btn-save" id="modal-save">Сохранить ключ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay hidden" id="loading-overlay">
+    <div class="loading-card">
+      <div class="loading-animation">
+        <div class="food-scan">🍽️</div>
+        <div class="scan-lines"></div>
+      </div>
+      <p class="loading-title">Анализирую блюдо...</p>
+      <div class="loading-steps">
+        <div class="loading-step active" id="step-1">🔍 Определяю ингредиенты</div>
+        <div class="loading-step" id="step-2">⚖️ Оцениваю порции</div>
+        <div class="loading-step" id="step-3">🧮 Считаю калории</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
